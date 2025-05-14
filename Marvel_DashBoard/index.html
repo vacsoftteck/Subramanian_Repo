@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marvel_DashBoard</title>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</head>
+
+<!-- from here  -->   
+     <style>
+        body {margin: 0; padding: 0; background: #f9fafb; height: 100vh; font-family: Arial, sans-serif; color: #333;}
+        .logo {position: relative; top: 20px; left: 10px; width: 150px; height: 50px;}
+        .main-heading {font-size: 40px; color: #1d3557; text-align: center; margin-top: 40px;}
+        
+        .card {display: flex; gap: 20px; justify-content: space-between; align-items: center; background-color: #ffffff; width: 480px; padding: 20px; border-radius: 12px; color: #555; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 20px auto;}
+      
+        .date {padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; transition: 0.3s ease;}
+        .date:hover {background-color: #f1f5f9;}
+      
+        .submit-btn {background-color: #007bff; padding: 12px 20px; border-radius: 8px; color: white; cursor: pointer; border: none; font-size: 16px;}
+        .submit-btn:hover {background-color: #0056b3; transform: scale(1.05);}
+      
+        .card-container {display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; margin-top: 20px; font-weight:bold;}
+      
+          .working-heading {color: #1d3557; font-size: 24px; margin-top: 40px; margin-left:20px ;}
+         .attendence-heading{color: #1d3557; font-size: 24px; margin-top: 40px; margin-left: 50px;}
+         
+         .livegaurdstatusheading{margin-left: 550px; margin-top: 50px; margin-bottom: 50px;}
+      
+        .livegaurd-card, .AttendenceSummary, .WorkingSummary {border: 2px solid #333; border-radius: 12px; padding: 30px; height: 80px; width: 120px; background-color: white; text-align: center; transition: transform 0.3s ease;}
+      
+        /* .livegaurd-card:hover, .AttendenceSummary:hover, .WorkingSummary:hover { color: white; } */
+      
+        .summary-container {display: flex; justify-content: space-evenly; margin-top: 40px; }
+
+        .chart-container {display: flex; gap: 20px; justify-content: space-evenly; margin-top: 40px;}
+        .apex-line-chart, .apex-bar-chart, .apex-pie-chart {background-color: #ffffff; width: 30%; height: 350px; border-radius: 12px; padding: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);}
+        .apex-bar-chart h3, .apex-line-chart h3, .apex-pie-chart h3 {text-align: center; color: #555; font-size: 18px;}
+      </style>
+      </head>
+      <body>
+      
+      <h1 class="main-heading">DASH BOARD</h1>
+      
+      <form id="dateForm">
+        <div class="card">
+          <div>
+            <label>StartDate</label>
+            <input type="date" class="date" id="StartDate" />
+          </div>
+          <div>
+            <label>EndDate</label>
+            <input type="date" class="date" id="EndDate" />
+          </div>
+          <button type="submit" class="submit-btn">Submit</button>
+        </div>
+      </form>
+      
+      <h2 class="livegaurdstatusheading">Live Guard Status</h2>
+      <div class="card-container">
+        <div class="livegaurd-card" id="onduty">Onduty</div>
+        <div class="livegaurd-card" id="absentees">Absentees</div>
+        <div class="livegaurd-card" id="earlyleavers">EarlyLeavers</div>
+        <div class="livegaurd-card" id="overtimers">Overtimers</div>
+      </div>
+      
+      <div class="summary-container">    
+        <h2 class="attendence-heading">Attendance Summary</h2> 
+        <h2 class="working-heading">Working Summary</h2>
+      </div>
+      
+      <div class="card-container">
+        <div class="AttendenceSummary" id="Absent" style="margin-top: 27px;">Absent</div>
+        <div class="AttendenceSummary" id="Present"  style="margin-top: 27px;">Present</div>
+      
+        <div class="card-container">
+          <div class="WorkingSummary" id="empty">Unspecified</div>
+          <div class="WorkingSummary" id="earlyleave">Early Leave</div>
+          <div class="WorkingSummary" id="working">Working</div>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <div class="apex-bar-chart">
+          <h3>Duty Time Line</h3>
+          <div id="pie-chart"></div>
+        </div>
+      
+        <div class="apex-line-chart">
+          <h3>OrgWiseGaurds</h3>
+          <div id="bar-chart"></div>
+        </div>
+      
+        <div class="apex-bar-chart">
+          <h3>Real Time Attendance</h3>
+          <div id="line-chart"></div>
+        </div>
+      </div>             
+    <!-- till here -->
+
+    <script>
+            let lineChart;
+            let dutyLineChart;
+            let pieChart;
+        window.onload = function () {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('StartDate').value = today;
+            document.getElementById('EndDate').value = today;
+            document.getElementById('StartDate').setAttribute('max', today);
+            document.getElementById('EndDate').setAttribute('max', today);
+           
+        
+           
+            // Trigger fetch on page load
+            fetchData(today, today);
+    
+            // Attach event listener to the form
+            document.getElementById('dateForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+                const startDate = document.getElementById("StartDate").value;
+                const endDate = document.getElementById("EndDate").value;
+                fetchData(startDate, endDate);
+            });
+        };
+        
+        function fetchData(startDate, endDate) {
+            const apiUrl = `https://marvel.vaccrm.com/VACREPO/api/api.php?apikey=MarvelCinematicUniverse&operation=dashboard&id=1&sdate=${startDate}&edate=${endDate}`;
+               
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API Response:', data);
+    
+                    // Dynamic styling variables (could come from API or config)
+                    const fontSize = "32px"; // Default font size
+                    const fontWeight = "bold"; // Default font weight
+    
+                    // Updating Live Guards
+                    if (data && data.liveguards) {
+                        document.getElementById("onduty").innerHTML = `
+                            Onduty:<br>
+                            <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${data.liveguards.onduty || 0}</span>
+                        `;
+                        document.getElementById("absentees").innerHTML = `
+                            Absentees:<br>
+                            <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${data.liveguards.absentees || 0}</span>
+                        `;
+                        document.getElementById("earlyleavers").innerHTML = `
+                            EarlyLeavers:<br>
+                            <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${data.liveguards.earlyleavers || 0}</span>
+                        `;
+                        document.getElementById("overtimers").innerHTML = `
+                            Overtimers:<br>
+                            <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${data.liveguards.overtimers || 0}</span>
+                        `;
+                    }
+    
+                    // Updating Attendance Summary
+                    const attendanceSummary = data && data.attendance_summary ? data.attendance_summary : { Absent: 0, Present: 0 };
+                    document.getElementById("Absent").innerHTML = `
+                        Absent:<br>
+                        <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${attendanceSummary.Absent || 0}</span>
+                    `;
+                    document.getElementById("Present").innerHTML = `
+                        Present:<br>
+                        <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${attendanceSummary.Present || 0}</span>
+                    `;
+    
+                    // Updating Working Summary
+                    const workingSummary = data && data.working_summary ? data.working_summary : { "null": 0, "Early Leave": 0, Working: 0 };
+                    document.getElementById("empty").innerHTML = `
+                        Empty:<br>
+                        <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${workingSummary["null"] || 0}</span>
+                    `;
+                    document.getElementById("earlyleave").innerHTML = `
+                        Early Leave:<br>
+                        <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${workingSummary["Early Leave"] || 0}</span>
+                    `;
+                    document.getElementById("working").innerHTML = `
+                        Working:<br>
+                        <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${workingSummary.Working || 0}</span>
+                    `;
+    
+                    // Updating OrgWiseGuards
+                    // const orgwiseGuards = data && data.orgwiseGuards ? data.orgwiseGuards : { "VAC Softteck": { Absent: 0, Present: 0 } };
+                    // const vacSoftteckData = orgwiseGuards["VAC Softteck"] || { Absent: 0, Present: 0 };
+                    // document.getElementById("tech").innerHTML = `
+                    //     VAC Softteck:<br>
+                    //     <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">Active</span>
+                    // `;
+                    // document.getElementById("atent").innerHTML = `
+                    //     Absent:<br>
+                    //     <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${vacSoftteckData.Absent || 0}</span>
+                    // `;
+                    // document.getElementById("pretent").innerHTML = `
+                    //     Present:<br>
+                    //     <span style="font-size: ${fontSize}; font-weight: ${fontWeight};">${vacSoftteckData.Present || 0}</span>
+                    // `;
+
+                    // Orgwise Pie chart 
+
+                          if(data && data.orgwiseGuards){
+                             // Extract OrgWiseGuards data for Pie Chart
+            const orgwiseGuards = data?.orgwiseGuards?.["VAC Softteck"] || { Absent: 0, Present: 0 };
+            const seriesData = [parseInt(orgwiseGuards.Absent), parseInt(orgwiseGuards.Present)];
+
+            // Destroy previous chart if it exists
+            if (pieChart) {
+                pieChart.destroy();
+            }
+
+            // Create Pie Chart
+            const options = {
+                chart: {
+                    type: 'pie',
+                    height: 200,
+                },
+                series: seriesData,
+                labels: ['Absent', 'Present'],
+                colors: ['#FF4560', '#008FFB'], // Custom colors
+            };
+
+            pieChart = new ApexCharts(document.querySelector("#pie-chart"), options);
+            pieChart.render();
+
+                          }
+
+                        //   pie chart till here 
+
+                      // dutyTime bar Chart 
+
+                  
+
+                       if(lineChart){
+
+                        lineChart.destroy();
+
+                       }
+
+                       if(dutyLineChart){
+                        dutyLineChart.destroy();
+                       }
+
+                       document.querySelector("#line-chart").innerHTML = "";
+                       document.querySelector("#bar-chart").innerHTML = "";
+
+                      if (data && data.realtimeattendance) {
+                        const times = Object.keys(data.realtimeattendance);
+                        const punchInData = times.map(time => parseInt(data.realtimeattendance[time].punchin));
+                        const punchOutData = times.map(time => parseInt(data.realtimeattendance[time].punchout));
+    
+                        const options = {
+                            chart: { type: 'bar', height: 300 },
+                            series: [
+                                { name: 'Punch In', data: punchInData },
+                                { name: 'Punch Out', data: punchOutData },
+                            ],
+                            xaxis: { categories: times },
+                        };
+                        //toolbar change 
+                               
+                        // till here 
+    
+                        const chart = new ApexCharts(document.querySelector("#line-chart"), options);
+                        chart.render();
+                    }
+
+
+                    // till here
+
+                     // realtimeattendence chart 
+                     if (data && data.dutyTimeline) {
+                const categories = [
+                    "Last 3 Hours",
+                    "Upcoming 3 Hours",
+                    "Upcoming 3 to 6 Hours",
+                    "Upcoming 6 to 9 Hours",
+                    "Upcoming 9 to 12 Hours"
+                ];
+                const dutyData = [
+                    parseInt(data.dutyTimeline.last_3_hours),
+                    parseInt(data.dutyTimeline.upcoming_3_hours),
+                    parseInt(data.dutyTimeline.upcoming_3_to_6_hours),
+                    parseInt(data.dutyTimeline.upcoming_6_to_9_hours),
+                    parseInt(data.dutyTimeline.upcoming_9_to_12_hours)
+                ];
+
+                const dutyOptions = {
+                    chart: { type: 'line', height: 300 },
+                    series: [{ name: 'Duty Timeline', data: dutyData }],
+                    xaxis: { categories: categories },
+                    stroke: { curve: 'smooth' },
+                    markers: { size: 5 }
+                };
+
+                dutyLineChart = new ApexCharts(document.querySelector("#bar-chart"), dutyOptions);
+                dutyLineChart.render();
+                // till here 
+                     }
+
+
+
+
+                })
+
+               
+                
+
+
+    
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                });
+                
+        }
+
+    </script>
+</body>
+
+</html>
