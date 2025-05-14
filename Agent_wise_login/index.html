@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Wise Report</title>
+    <!-- Font Awesome CDN for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Basic Styles for the Body */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 0;
+            position:relative;
+            padding-top: -10px; /* Adjust padding to accommodate the header */
+        }
+
+        /* Main content container */
+        .content-container {
+            width: 80%;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        
+        /* Styling for the Page Header */
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 22px;
+        }
+
+        /* Card styling for form and buttons */
+        .card {
+            background: #e7e7e7;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: row; /* Arrange elements in a row */
+            align-items: center; /* Align the elements vertically */
+            gap: 10px; /* Space between elements */
+            width: 65%; /* Make the card narrower */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Form styling inside the card */
+        .card form {
+            display: flex;
+            gap: 15px;
+            align-items: center; /* Align form elements in a row */
+            flex-grow: 1; /* Allow form to grow and take space */
+        }
+
+        /* Styling for form labels */
+        label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        /* Date input field styling */
+        input[type="date"] {
+            padding: 8px;
+            width: 150px; /* Adjust width for better appearance */
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Button styling */
+        button {
+            padding: 0; /* Remove padding for equal width and height */
+            height: 40px; /* Set fixed height for both buttons */
+            display: flex; /* Enable flexbox for centering */
+            justify-content: center; /* Center text horizontally */
+            align-items: center; /* Center text vertically */
+            text-align: center;
+            font-size: 14px; /* Ensures the text is readable */
+            border-radius: 4px;
+            gap: 8px; /* Space between icon and text */
+        }
+
+        /* Submit button specific styling */
+        .submit-btn {
+            background-color: #007BFF; /* Blue */
+            color: white;
+            width: 100px; /* Fixed width */
+            border:2px solid white;
+            border-radius:10px;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056B3; /* Darker blue */
+        }
+
+        /* Download button specific styling */
+        .download-btn {
+            background-color: #28A745; /* Green */
+            color: white;
+            width: 60px; /* Fixed width */
+            display: none; /* Initially hidden */
+            border:2px solid white;
+            border-radius:10px;
+        }
+
+        .download-btn i {
+            font-size: 18px; /* Icon size */
+        }
+
+        .download-btn:hover {
+            background-color: #1C7430; /* Darker green */
+        }
+
+        /* Table Styling */
+        table {
+            width: 80%;
+            margin: 30px auto;
+            border-collapse: collapse;
+            margin-top: 30px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        /* Table Header and Data Cell Padding */
+        table th,
+        table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        /* Table Header Font Styling */
+        table th {
+            font-weight: normal;
+        }
+
+        /* Column Color Styling */
+
+        /* S.No. and Extension Header */
+        table th:nth-child(1),
+        table th:nth-child(2) {
+            background-color: #2A5D9F; /* Blue */
+            color: white;
+        }
+
+        /* Incoming Call Headers */
+        table th:nth-child(3),
+        table th:nth-child(4),
+        table th:nth-child(5),
+        table th:nth-child(6),
+        table th:nth-child(7) {
+            background-color: #27AE60; /* Green */
+            color: white;
+        }
+
+        /* Outgoing Call Headers */
+        table th:nth-child(8),
+        table th:nth-child(9),
+        table th:nth-child(10),
+        table th:nth-child(11) {
+            background-color: #E74C3C; /* Red */
+            color: white;
+        }
+
+        /* Total Column Header */
+        table th:nth-child(12):not([colspan]) {
+            background-color: #2A5D9F; /* Golden Yellow */
+            color: #333; /* Dark text for contrast */
+        }
+
+        /* Row Zebra Striping */
+        table tr:nth-child(even) {
+            background-color: #F4F4F4; /* Light gray */
+        }
+        table tr:nth-child(odd) {
+            background-color: #FFFFFF; /* White */
+        }
+
+        /* Row Hover Effect */
+        table tr:hover {
+            background-color: #DCEEFF; /* Light blue */
+        }
+
+        /* Table Cell Styling */
+        table td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* Responsive Breakpoints */
+
+        /* For Small Screens */
+        @media (max-width: 576px) {
+            body {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .content-container {
+                width: 95%;
+                margin: 10px auto;
+                padding: 15px;
+            }
+
+            .card {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+                padding: 10px;
+            }
+
+            .card form {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .card button {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            table th,
+            table td {
+                font-size: 12px;
+                padding: 8px;
+            }
+        }
+
+        /* For Tablets */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 18px;
+            }
+
+            .content-container {
+                width: 90%;
+            }
+
+            .card {
+                width: 80%;
+            }
+
+            table th,
+            table td {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+
+        /* For Larger Screens */
+        @media (min-width: 1200px) {
+            body {
+                font-size: 14px;
+            }
+
+            h1 {
+                font-size:28px;
+            }
+
+            .content-container {
+                width: 70%;
+            }
+
+            table {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content-container">
+        <header style="display: flex; align-items: center; padding: 5px 10px;">
+            <img src="vac (2).jpg" alt="VAC SOFTTECK Logo" style="height: 60px; width: auto; margin-right: 8px;">
+        </header>
+        <h1>Agent Wise Report</h1>
+
+        <!-- Card containing the filter form and buttons -->
+        <div class="card">
+            <form id="filterForm">
+                <label for="start_date">Start Date:</label>
+                <input type="date" id="start_date" name="start_date">
+
+                <label for="end_date">End Date:</label>
+                <input type="date" id="end_date" name="end_date">
+
+                <button type="submit" class="submit-btn">Submit</button>
+            </form>
+
+            <!-- Download button with icon -->
+            <button id="downloadBtn" class="download-btn">
+                <i class="fas fa-download"></i>
+            </button>
+        </div>
+
+        <!-- Table to display the report -->
+        <table id="reportTable">
+            <thead>
+                <tr>
+                    <th>SNo.</th>
+                    <th>Extension</th>
+                    <th colspan="5">Incoming Call</th>
+                    <th colspan="4" style="background-color: #E74C3C; color: white;">Outgoing Call</th>
+                    <th style="background-color: #2A5D9F; color: white; text-align: center;">Total</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th>Total</th>
+                    <th>Ans</th>
+                    <th>Busy</th>
+                    <th>N/A</th>
+                    <th>Failed</th>
+                    <th>Total</th>
+                    <th>Ans</th>
+                    <th>RNR</th>
+                    <th>Failed</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be populated dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const today = new Date();
+            const formatDate = (date) => {
+                const d = String(date.getDate()).padStart(2, '0');
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const y = date.getFullYear();
+                return `${y}-${m}-${d}`;
+            };
+
+            // Set default values to today's date
+            const startDateInput = document.getElementById('start_date');
+            const endDateInput = document.getElementById('end_date');
+            startDateInput.value = formatDate(today);
+            endDateInput.value = formatDate(today);
+
+            const reportTableBody = document.querySelector('#reportTable tbody');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            // Function to populate the table
+            function populateTable(data) {
+                reportTableBody.innerHTML = ""; // Clear the table
+
+                if (data.length === 0) {
+                    // If no data, show "No records"
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td colspan="12" style="text-align:center;">No records found</td>`;
+                    reportTableBody.appendChild(tr);
+                } else {
+                    // Otherwise, populate the table with the data
+                    data.forEach((row, index) => {
+                        const tr = document.createElement('tr');
+
+                        // Populate each column with corresponding data
+                        tr.innerHTML = `
+                            <td>${index + 1}</td> <!-- Serial Number -->
+                            <td>${row.Extension || ''}</td> <!-- Extension -->
+
+                            <!-- Incoming Calls -->
+                            <td>${row['Total Incoming Calls'] || '0'}</td>
+                            <td>${row['Incoming ANSWERED'] || '0'}</td>
+                            <td>${row['Incoming BUSY'] || '0'}</td>
+                            <td>${row['Incoming NO_ANSWER'] || '0'}</td>
+                            <td>${row['Incoming FAILED'] || '0'}</td>
+
+                            <!-- Outgoing Calls -->
+                            <td>${row['Total Outgoing Calls'] || '0'}</td>
+                            <td>${row['Outgoing ANSWERED'] || '0'}</td>
+                            <td>${row['Outgoing RNR'] || '0'}</td>
+                            <td>${row['Outgoing FAILED'] || '0'}</td>
+
+                            <!-- Total (Sum of Total Incoming + Total Outgoing) -->
+                            <td>${parseInt(row['Total Incoming Calls'] || 0) + parseInt(row['Total Outgoing Calls'] || 0)}</td>
+                        `;
+
+                        // Append the row to the table body
+                        reportTableBody.appendChild(tr);
+                    });
+                }
+                downloadBtn.style.display = 'inline-block';  // Make the download button visible
+            }
+
+            // Function to fetch data based on the given dates
+            function fetchData(startDate, endDate) {
+                const apiUrl = `https://192.168.100.220/KARTHU/ISWARYAHOSPITAL/API/api.php?operation=extnSummary&sdate=${startDate}&edate=${endDate}`;
+                
+                fetch(apiUrl)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        console.log("Data received from API:", data);
+                        populateTable(data.data);
+                    })
+                    .catch((error) => {
+                        console.error("Error fetching data:", error);
+                        alert("Failed to fetch data. Please try again.");
+                    });
+            }
+
+            // Fetch today's data by default
+            fetchData(formatDate(today), formatDate(today));
+
+            // Submit event listener for form
+            document.getElementById('filterForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                fetchData(startDate, endDate);
+            });
+
+            // CSV download logic
+            downloadBtn.addEventListener('click', function () {
+                let csvContent = "SNo.,Extension,Incoming Total,Incoming Ans,Incoming Busy,Incoming N/A,Incoming Failed,Outgoing Total,Outgoing Ans,Outgoing RNR,Outgoing Failed,Total\n";
+                const rows = document.querySelectorAll('#reportTable tbody tr');
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const rowData = Array.from(cells).map(cell => `"${cell.innerText}"`).join(",");
+                    csvContent += rowData + "\n";
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `agent_wise_report.csv`;
+                link.click();
+            });
+        });
+    </script>
+</body>
+</html>

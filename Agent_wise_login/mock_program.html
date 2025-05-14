@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Table with Modal</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+        }
+        table {
+            width: 300px;
+            margin: auto;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="modal" id="modal">
+        <h3>Enter Details</h3>
+        <label>Name: <input type="text" id="name"></label><br><br>
+        <label>Age: <input type="number" id="age"></label><br><br>
+        <button onclick="saveData()">Save</button>
+        <button onclick="closeModal()">Close</button>
+    </div>
+    <button onclick="openModal()">Add</button>
+
+    <script>
+        function openModal() {
+            document.getElementById("modal").style.display = "block";
+        }
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+        function saveData() {
+            let name = document.getElementById("name").value;
+            let age = document.getElementById("age").value;
+            if (name && age) {
+                let tableBody = document.getElementById("tableBody");
+                let row = tableBody.insertRow();
+                row.insertCell(0).innerText = name;
+                row.insertCell(1).innerText = age;
+                closeModal();
+            } else {
+                alert("Please enter both Name and Age");
+            }
+        }
+    </script>
+</body>
+</html>

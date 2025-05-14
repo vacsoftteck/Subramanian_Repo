@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WhatsApp Chat UI</title>
+  <style>
+    /* ===== Basic Layout ===== */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chat-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background-color: #fff;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ===== Header ===== */
+    .chat-header {
+      background-color: #075E54;
+      color: white;
+      padding: 15px;
+      font-weight: bold;
+    }
+
+    /* ===== Chat Messages ===== */
+    .chat-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      background-color: #e5ddd5;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      margin: 5px 0;
+      max-width: 70%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: inline-block;
+      word-wrap: break-word;
+    }
+
+    .message.sent {
+      background-color: #dcf8c6;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .message.received {
+      background-color: #fff;
+      align-self: flex-start;
+    }
+
+    /* ===== Chat Input Area ===== */
+    .chat-input {
+      display: flex;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-top: 1px solid #ccc;
+      gap: 10px;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      outline: none;
+    }
+
+    #sendBtn {
+      background-color: #075E54;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #sendBtn:hover {
+      background-color: #1ebe5d;
+    }
+
+    #sendBtn svg {
+      fill: white;
+    }
+
+    #templateBtn {
+      background-color: #075E54;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 45%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="chat-container">
+    <!-- Header -->
+    <div class="chat-header" id="chatHeader">VAC Chat</div>
+
+    <!-- Message Box -->
+    <div class="chat-messages" id="chatBox"></div>
+
+    <!-- Input Section -->
+    <div class="chat-input" id="chatInputSection">
+      <input type="text" placeholder="type a message" id="chatInput" />
+      <button id="sendBtn" onclick="sendMessage()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
+          <path d="M2.01 21l20.99-9L2.01 3v7l15 2-15 2z" />
+        </svg>
+      </button>
+      <button id="templateBtn" onclick="sendTemplate()" style="display: none;">Send Template</button>
+    </div>
+  </div>
+
+  <script>
+    // ===== Configuration =====
+    const apiURL = 'https://api.vaccrm.com/whatsappVAC/API/VACWA_api.php';
+    const queryParams = new URLSearchParams(window.location.search);
+    const userNumber = queryParams.get('number');
+
+    const chatBox = document.getElementById('chatBox');
+    const input = document.getElementById('chatInput');
+    const chatHeader = document.getElementById('chatHeader');
+    const sendBtn = document.getElementById('sendBtn');
+    const templateBtn = document.getElementById('templateBtn');
+
+    let openChat = true;
+
+    // ===== Initial Checks =====
+    if (!userNumber) {
+      alert("No phone number provided. Use ?number=xxxxxxxxxx in the URL.");
+      input.disabled = true;
+      sendBtn.disabled = true;
+    }
+
+    // ===== Fetch Chat History =====
+    async function fetchChatHistory() {
+      const formData = new FormData();
+      formData.append('operation', 'getChatOfContact');
+      formData.append('number', userNumber);
+
+      try {
+        const res = await fetch(apiURL, { method: 'POST', body: formData });
+        const data = await res.json();
+        chatBox.innerHTML = '';
+
+        if (data.success === "true" && Array.isArray(data.messages)) {
+          if (data.messages.length === 0) {
+            chatBox.innerHTML = '<div style="text-align:center; margin-top:20px;">No messages found.</div>';
+            return;
+          }
+
+          data.messages.forEach(msg => {
+            if (!msg.msg || !msg.type) return;
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', msg.type === 'IN' ? 'received' : 'sent');
+
+            const msgTime = msg.msgtime ? new Date(msg.msgtime.replace("\n", " ")).toLocaleString() : '';
+            msgDiv.innerHTML = `<div>${msg.msg}</div><small style="display:block; font-size: 10px; color: gray; text-align: right;">${msgTime}</small>`;
+
+            chatBox.appendChild(msgDiv);
+          });
+
+          chatBox.scrollTop = chatBox.scrollHeight;
+        } else {
+          chatBox.innerHTML = `<div style="text-align:center; color:red;">Failed to load chat.</div>`;
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        chatBox.innerHTML = `<div style="text-align:center; color:red;">Error fetching chat.</div>`;
+      }
+    }
+
+    // ===== Fetch Contact Info =====
+    async function fetchContactInfo() {
+      const formData = new FormData();
+      formData.append('operation', 'getRcvdContact');
+      formData.append('number', userNumber);
+
+      try {
+        const res = await fetch(apiURL, { method: 'POST', body: formData });
+        const data = await res.json();
+        console.log("Contact Info:", data);
+
+        if (data && data.name && data.number) {
+          chatHeader.textContent = `${data.name} (${data.number})`;
+        }
+
+        openChat = data.openChat === true || data.openChat === "true";
+
+        input.disabled = !openChat;
+        input.placeholder = openChat ? "type a message" : "";
+        sendBtn.style.display = openChat ? "flex" : "none";
+        templateBtn.style.display = openChat ? "none" : "inline-block";
+
+      } catch (error) {
+        console.error('Contact fetch error:', error);
+      }
+    }
+
+    // ===== Send Message =====
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('message', 'sent');
+      msgDiv.textContent = text;
+      chatBox.appendChild(msgDiv);
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      const formData = new FormData();
+      formData.append('operation', 'sendMsg');
+      formData.append('number', userNumber);
+      formData.append('msg', text);
+
+      try {
+        const response = await fetch(apiURL, { method: 'POST', body: formData });
+        const result = await response.json();
+        console.log("Send message result:", result);
+
+        if (result.success !== "true") {
+          console.error("Error sending message");
+        }
+
+        await fetchChatHistory();
+        fetchContactInfo();
+
+      } catch (error) {
+        console.error("Network error sending message:", error);
+      }
+    }
+
+    // ===== Send Template (Redirect) =====
+    function sendTemplate() {
+      window.location.href = "minichat.php";
+    }
+
+    // ===== Initialize Chat =====
+    if (userNumber) {
+      fetchContactInfo();
+      fetchChatHistory();
+      setInterval(fetchChatHistory, 2000);
+    }
+
+    // ===== Send on Enter Key =====
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && openChat) sendMessage();
+    });
+  </script>
+</body>
+</html>

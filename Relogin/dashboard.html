@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to the Dashboard!</h1>
+
+    <button id="logout">LOGOUT</button>
+
+    <script>    
+        
+        if (!localStorage.getItem("loggedIn")) {
+            window.location.replace("index.html");
+        }
+
+        
+        function preventBack() {
+            history.pushState(null, "", "invalid.html"); 
+        }
+
+        preventBack(); 
+
+        window.addEventListener("popstate", function () {
+            window.location.replace("invalid.html"); 
+        });
+
+        // **Logout Functionality**
+        document.getElementById("logout").addEventListener("click", function() {
+            localStorage.removeItem("loggedIn"); // Remove login flag
+            sessionStorage.clear(); // Clear session storage
+            history.replaceState(null, "", "index.html"); // Prevent back button from accessing dashboard
+            window.location.replace("index.html"); // Redirect to login page
+        });
+
+    </script>
+</body>
+</html>

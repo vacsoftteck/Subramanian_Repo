@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Wise Report</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Agent Wise Report</h1>
+
+        <!-- Rectangular Card -->
+        <div class="card">
+            <form method="POST" action="process.php">
+                <label for="start-date">Start Date:</label>
+                <input type="date" id="start-date" name="start-date" required>
+
+                <label for="in-date">Indate:</label>
+                <input type="date" id="in-date" name="in-date" required>
+
+                <button type="submit" name="submit" class="btn submit-btn">Submit</button>
+                <button type="button" onclick="downloadReport()" class="btn download-btn">Download</button>
+            </form>
+        </div>
+
+        <!-- Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>SNo.</th>
+                    <th>Extension</th>
+                    <th>Incoming Call
+                        <table class="sub-table">
+                            <tr>
+                                <th>Ans</th>
+                                <th>N/A</th>
+                                <th>Failed</th>
+                                <th>Busy</th>
+                                <th>Total</th>
+                            </tr>
+                        </table>
+                    </th>
+                    <th>Outgoing Call
+                        <table class="sub-table">
+                            <tr>
+                                <th>Ans</th>
+                                <th>RNR</th>
+                                <th>Failed</th>
+                                <th>Total</th>
+                            </tr>
+                        </table>
+                    </th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Placeholder rows, data will come from PHP -->
+                <tr>
+                    <td>1</td>
+                    <td>101</td>
+                    <td>
+                        <table class="sub-table">
+                            <tr>
+                                <td>5</td>
+                                <td>2</td>
+                                <td>1</td>
+                                <td>1</td>
+                                <td>9</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td>
+                        <table class="sub-table">
+                            <tr>
+                                <td>7</td>
+                                <td>1</td>
+                                <td>2</td>
+                                <td>10</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td>19</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function downloadReport() {
+            // Placeholder for downloading logic
+            alert('Download functionality coming soon!');
+        }
+    </script>
+</body>
+</html>

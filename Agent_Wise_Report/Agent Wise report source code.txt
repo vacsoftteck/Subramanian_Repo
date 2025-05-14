@@ -1,0 +1,375 @@
+index.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Wise Report</title>
+    <link rel="stylesheet" href="chatstyle8.css"> 
+</head>
+<body>
+    <h1>Agent Wise Report</h1>
+    <div class="card">
+        <form id="filterForm">
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date">
+
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date">
+
+            <button type="submit" class="submit-btn">Submit</button>
+        </form>
+
+        <!-- Download button -->
+        <button id="downloadBtn" class="download-btn hidden">Download as CSV</button>
+    </div>
+
+    <table id="reportTable">
+        <thead>
+            <tr>
+                <th>SNo.</th>
+                <th>Extension</th>
+                <th  colspan="5">Incoming Call</th>
+                <th colspan="4">Outgoing Call</th>
+                <th style="background-color: #233b93; color: white; text-align: center;">Total</th> <!-- Inline CSS for Total -->
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th>Total</th>
+                <th>Ans</th>
+                <th>Busy</th>
+                <th>N/A</th>
+                <th>Failed</th>
+                <th>Total</th>
+                <th>Ans</th>
+                <th>RNR</th>
+                <th>Failed</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const today = new Date();
+            const formatDate = (date) => {
+                const d = String(date.getDate()).padStart(2, '0');
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const y = date.getFullYear();
+                return `${y}-${m}-${d}`;
+            };
+
+            // Set default values to today's date
+            const startDateInput = document.getElementById('start_date');
+            const endDateInput = document.getElementById('end_date');
+            startDateInput.value = formatDate(today);
+            endDateInput.value = formatDate(today);
+
+            const reportTableBody = document.querySelector('#reportTable tbody');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            // Function to populate the table
+            function populateTable(data) {
+                reportTableBody.innerHTML = ""; // Clear the table
+
+                if (data.length === 0) {
+                    // If no data, show "No records"
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td colspan="12" style="text-align:center;">No records found</td>`;
+                    reportTableBody.appendChild(tr);
+                } else {
+                    // Otherwise, populate the table with the data
+                    data.forEach((row, index) => {
+                        const tr = document.createElement('tr');
+
+                        // Populate each column with corresponding data
+                        tr.innerHTML = `
+                            <td>${index + 1}</td> <!-- Serial Number -->
+                            <td>${row.Extension || ''}</td> <!-- Extension -->
+
+                            <!-- Incoming Calls -->
+                            <td>${row['Total Incoming Calls'] || '0'}</td>
+                            <td>${row['Incoming ANSWERED'] || '0'}</td>
+                            <td>${row['Incoming BUSY'] || '0'}</td>
+                            <td>${row['Incoming NO_ANSWER'] || '0'}</td>
+                            <td>${row['Incoming FAILED'] || '0'}</td>
+
+                            <!-- Outgoing Calls -->
+                            <td>${row['Total Outgoing Calls'] || '0'}</td>
+                            <td>${row['Outgoing ANSWERED'] || '0'}</td>
+                            <td>${row['Outgoing RNR'] || '0'}</td>
+                            <td>${row['Outgoing FAILED'] || '0'}</td>
+
+                            <!-- Total (Sum of Total Incoming + Total Outgoing) -->
+                            <td>${parseInt(row['Total Incoming Calls'] || 0) + parseInt(row['Total Outgoing Calls'] || 0)}</td>
+                        `;
+
+                        // Append the row to the table body
+                        reportTableBody.appendChild(tr);
+                    });
+                }
+            }
+
+            // Function to fetch data based on the given dates
+            function fetchData(startDate, endDate) {
+                const apiUrl = `https://192.168.100.220/KARTHU/ISWARYAHOSPITAL/API/api.php?operation=extnSummary&sdate=${startDate}&edate=${endDate}`;
+                
+                fetch(apiUrl)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        console.log("Data received from API:", data);
+                        populateTable(data.data);
+                        downloadBtn.classList.remove('hidden');
+                    })
+                    .catch((error) => {
+                        console.error("Error fetching data:", error);
+                        alert("Failed to fetch data. Please try again.");
+                    });
+            }
+
+            // Fetch today's data by default
+            fetchData(formatDate(today), formatDate(today));
+
+            // Submit event listener for form
+            document.getElementById('filterForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (!startDate || !endDate) {
+                    alert("Please select both start and end dates.");
+                    return;
+                }
+
+                // Fetch the data based on the selected date range
+                fetchData(startDate, endDate);
+            });
+
+            // CSV download logic
+            downloadBtn.addEventListener('click', function () {
+                let csvContent = "SNo.,Extension,Incoming Total,Incoming Ans,Incoming Busy,Incoming N/A,Incoming Failed,Outgoing Total,Outgoing Ans,Outgoing RNR,Outgoing Failed,Total\n";
+                const rows = document.querySelectorAll('#reportTable tbody tr');
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const rowData = Array.from(cells).map(cell => `"${cell.innerText}"`).join(",");
+                    csvContent += rowData + "\n";
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `agent_wise_report.csv`;
+                link.click();
+            });
+        });
+    </script>
+</body>
+</html>
+
+chatstyle8.css
+
+/* Basic Styles for the Body */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container for the Main Content */
+.container {
+    width: 80%;
+    margin: 40px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Styling for the Page Header */
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2rem;
+}
+
+/* Card styling for form and buttons */
+.card {
+    background: #e3e3e3;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 55%; /* Match the width of the table */
+    margin-left: auto;  /* Center the card */
+    margin-right: auto; /* Center the card */
+}
+
+/* Form styling inside the card */
+.card form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Styling for form labels */
+label {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+/* Date input field styling */
+input[type="date"] {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Button styling */
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Submit button specific styling */
+.submit-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Download button specific styling */
+.download-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+/* Table Styling */
+table {
+    width: 80%; /* Keep the table width consistent */
+    margin: 30px auto;
+    border-collapse: collapse;
+    margin-top: 30px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+/* Table Header and Data Cell Padding */
+table th,
+table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+/* Table Header Font Styling */
+table th {
+    font-weight: normal;
+}
+
+/* Column Color Styling */
+
+/* Styling for Serial Number Column */
+table th:nth-child(1) {
+    background-color: #233b93; /* SNo */
+    color: white;
+}
+
+/* Styling for Extension Column */
+table th:nth-child(2) {
+    background-color: #233b93; /* Extension */
+    color: white;
+}
+
+/* Incoming Call Section (Green for the heading only) */
+
+/* Styling for the Incoming Call headers */
+table th:nth-child(3), /* Incoming Call (Total) */
+table th:nth-child(4), /* Incoming Call (Ans) */
+table th:nth-child(5), /* Incoming Call (Busy) */
+table th:nth-child(6), /* Incoming Call (N/A) */
+table th:nth-child(7) { /* Incoming Call (Failed) */
+    background-color: #26aa1f; /* Green for Incoming Call Headings */
+    color: white;
+}
+
+/* Avoid green color for dynamically generated Incoming Call Data */
+table td:nth-child(3), /* Incoming Call (Total) */
+table td:nth-child(4), /* Incoming Call (Ans) */
+table td:nth-child(5), /* Incoming Call (Busy) */
+table td:nth-child(6), /* Incoming Call (N/A) */
+table td:nth-child(7) { /* Incoming Call (Failed) */
+    background-color: white;  /* Reset background color to white */
+    color: black; /* Set text color to black */
+}
+
+/* Outgoing Call Section (Red for the heading and sub-columns) */
+
+/* Styling for Outgoing Call Section (colspan) */
+table th[colspan="4"] {
+    background-color: #f44336; /* Red for Outgoing Call Heading */
+    color: white;
+}
+
+/* Outgoing Call Sub-columns (Second Row) */
+table th:nth-child(8), /* Outgoing Call (Total) */
+table th:nth-child(9), /* Outgoing Call (Ans) */
+table th:nth-child(10), /* Outgoing Call (RNR) */
+table th:nth-child(11) { /* Outgoing Call (Failed) */
+    background-color: #f44336; /* Red for Outgoing Call Sub-columns */
+    color: white;
+}
+
+/* Styling for the "Total" Column (12th Column) */
+
+/* Ensure the Total Heading is blue and not green */
+table th:nth-child(12):not([colspan]) {
+    background-color: #233b93 !important; /* Blue for Total Heading */
+    color: white !important; /* White text for Total Heading */
+    text-align: center !important; /* Ensure the text aligns */
+}
+
+/* Ensure the "Total" data is correctly styled */
+table td:nth-child(12) {
+    background-color: white !important; /* White background for Total data */
+    color: black !important; /* Black text for Total data */
+}
+
+/* Table Row Hover and Even Row Styling */
+
+/* Styling for even rows to alternate background color */
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Hover effect for table rows */
+table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Sub-table styling for smaller tables */
+.sub-table {
+    width: 100%;
+    border: none;
+}
+
+/* Sub-table header and data cell padding */
+.sub-table th,
+.sub-table td {
+    padding: 8px;
+    font-size: 12px;
+    border: none;
+}

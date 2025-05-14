@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VS Hospital Report</title>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .date-filter {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .date-filter input {
+      padding: 8px 12px;
+      margin: 0 10px;
+    }
+    .date-filter button {
+      padding: 8px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: #666;
+    }
+    .card p {
+      font-size: 24px;
+      color: #333;
+    }
+    #chart {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>VS Hospital Daily Report</h1>
+
+  <div class="date-filter">
+    <input type="date" id="startDate">
+    <input type="date" id="endDate">
+    <button onclick="loadReport()">Load Report</button>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h3>Avg Calls per Agent</h3>
+      <p id="avgCallsPerAgent">--</p>
+    </div>
+    <div class="card">
+      <h3>Avg Call Completed Time (sec)</h3>
+      <p id="avgCallCompletedTime">--</p>
+    </div>
+    <div class="card">
+      <h3>Avg Call Waiting Time (sec)</h3>
+      <p id="avgCallWaitingTime">--</p>
+    </div>
+    <div class="card">
+      <h3>Avg Drop Calls Time (sec)</h3>
+      <p id="avgDropCallsTime">--</p>
+    </div>
+  </div>
+
+  <div id="chart"></div>
+
+  <script>
+    function formatDate(date) {
+      const d = new Date(date);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function loadReport() {
+      const sDate = document.getElementById("startDate").value;
+      const eDate = document.getElementById("endDate").value;
+
+      if (!sDate || !eDate) {
+        alert("Please select both start and end dates.");
+        return;
+      }
+
+      const apiUrl = `http://192.168.102.53/KARTHU/VS/api.php?sdate=${sDate}&edate=${eDate}%20%20%20VS%20Hospital%20API`;
+      fetchReport(apiUrl);
+    }
+
+    async function fetchReport(apiUrl) {
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+
+        document.getElementById("avgCallsPerAgent").textContent = data.avg_calls_per_agent;
+        document.getElementById("avgCallCompletedTime").textContent = data.avg_call_completed_time;
+        document.getElementById("avgCallWaitingTime").textContent = data.avg_call_waiting_time;
+        document.getElementById("avgDropCallsTime").textContent = data.avgDropCallsTime;
+
+        const chartData = data.avgCallsTrafficTime.map(item => ({
+          x: new Date(item.hour).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          y: parseInt(item.call_count)
+        }));
+
+        renderChart(chartData);
+      } catch (error) {
+        console.error("Error fetching report:", error);
+        alert("Failed to load report. Check console for details.");
+      }
+    }
+
+    function renderChart(data) {
+      const options = {
+        chart: {
+          type: 'bar',
+          height: 350
+        },
+        title: {
+          text: "Call Traffic per Hour",
+          align: 'center'
+        },
+        xaxis: {
+          type: 'category',
+          title: { text: 'Time' }
+        },
+        yaxis: {
+          title: { text: 'Call Count' }
+        },
+        series: [{
+          name: 'Calls',
+          data: data
+        }]
+      };
+
+      const chartDiv = document.querySelector("#chart");
+      chartDiv.innerHTML = ""; // clear old chart
+      const chart = new ApexCharts(chartDiv, options);
+      chart.render();
+    }
+
+    // Load today's data on first load
+    window.onload = () => {
+      const today = formatDate(new Date());
+      document.getElementById("startDate").value = today;
+      document.getElementById("endDate").value = today;
+      const defaultApi = `http://192.168.102.53/KARTHU/VS/api.php?sdate=${today}&edate=${today}%20%20%20VS%20Hospital%20API`;
+      fetchReport(defaultApi);
+    };
+  </script>
+
+</body>
+</html>
